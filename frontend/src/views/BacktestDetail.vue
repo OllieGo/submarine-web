@@ -27,7 +27,7 @@
       </el-card>
       <el-card class="stat-card">
         <div class="stat-content">
-          <div class="stat-value negative">{{ formatPercent(backtest.max_drawdown) }}</div>
+          <div class="stat-value negative">{{ formatDrawdown(backtest.max_drawdown) }}</div>
           <div class="stat-label">最大回撤</div>
         </div>
       </el-card>
@@ -132,6 +132,7 @@ const chartRef = ref(null)
 const strategyNameMap = { dual_ma: '双均线交叉', triple_ma: '三重均线', four_line: '四线多头' }
 const getStrategyName = (code) => strategyNameMap[code] || code
 const formatPercent = (value) => value ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}%` : '--'
+const formatDrawdown = (value) => value ? `${value.toFixed(2)}%` : '--'
 const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleString('zh-CN') : '--'
 const goBack = () => router.push('/backtest')
 
@@ -154,7 +155,7 @@ const initChart = () => {
 const loadData = async () => {
   const id = route.params.id
   try {
-    backtest.value = await backtestAPI.getById(id)
+    backtest.value = await backtestAPI.getResult(id)
     if (backtest.value.trades) {
       trades.value = typeof backtest.value.trades === 'string' ? JSON.parse(backtest.value.trades) : backtest.value.trades
     }

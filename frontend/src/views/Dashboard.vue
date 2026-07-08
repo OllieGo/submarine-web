@@ -76,7 +76,7 @@
           <el-tag size="small" type="info">风险控制</el-tag>
         </div>
         <div class="stat-value-wrap">
-          <div class="stat-value negative">{{ formatPercent(stats.max_drawdown || 0) }}</div>
+          <div class="stat-value negative">{{ formatDrawdown(stats.max_drawdown || 0) }}</div>
         </div>
         <div class="stat-label">最大回撤</div>
         <div class="stat-trend" :class="stats.drawdown_trend > 0 ? 'positive' : 'negative'">
@@ -109,7 +109,7 @@
             <router-link to="/backtest" class="view-all">查看全部 →</router-link>
           </div>
         </template>
-        <el-table :data="recentResults" border stripe>
+        <el-table :data="recentResults" border stripe empty-text="暂无测试结果">
           <el-table-column prop="ts_code" label="股票代码" width="120" />
           <el-table-column prop="stock_name" label="股票名称" width="120" />
           <el-table-column label="策略类型" width="130">
@@ -143,7 +143,6 @@
             </template>
           </el-table-column>
         </el-table>
-        <div v-if="recentResults.length === 0" class="empty-tip">暂无测试结果</div>
       </el-card>
       <div class="right-panel">
         <el-card>
@@ -216,6 +215,7 @@ const getStrategyIcon = (code) => strategyIconMap[code] || '⚙️'
 const getStrategyTagType = (code) => strategyTagType[code] || 'default'
 const getStrategyBgClass = (code) => strategyBgClass[code] || 'bg-gray'
 const formatPercent = (value) => value ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}%` : '--'
+const formatDrawdown = (value) => value ? `${value.toFixed(2)}%` : '--'
 const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleString('zh-CN') : '--'
 
 const loadData = async () => {

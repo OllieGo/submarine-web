@@ -34,7 +34,7 @@
           <span class="result-count">共 {{ backtestResults.length }} 条记录</span>
         </div>
       </template>
-      <el-table :data="backtestResults" border @selection-change="handleSelectionChange">
+      <el-table :data="backtestResults" border @selection-change="handleSelectionChange" empty-text="暂无测试结果">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="ts_code" label="股票代码" width="120" />
         <el-table-column prop="stock_name" label="股票名称" width="120" />
@@ -55,7 +55,7 @@
         </el-table-column>
         <el-table-column label="最大回撤" width="120">
           <template #default="{ row }">
-            <span class="negative">{{ formatPercent(row.max_drawdown) }}</span>
+            <span class="negative">{{ formatDrawdown(row.max_drawdown) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="sharpe_ratio" label="夏普比率" width="100" />
@@ -72,11 +72,10 @@
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <router-link :to="`/backtest/${row.id}`" class="btn-view">查看详情</router-link>
+            <router-link :to="`/backtest/${row.id}`" class="btn-view">查看</router-link>
           </template>
         </el-table-column>
       </el-table>
-      <div v-if="backtestResults.length === 0" class="empty-tip">暂无测试结果</div>
     </el-card>
     <el-dialog title="确认删除" v-model="deleteDialogVisible" width="400px">
       <p>确定要删除选中的 {{ selectedRows.length }} 条回溯结果吗？此操作不可撤销。</p>
@@ -103,6 +102,7 @@ const deleteDialogVisible = ref(false)
 const strategyNameMap = { dual_ma: '双均线交叉', triple_ma: '三重均线', four_line: '四线多头' }
 const getStrategyName = (code) => strategyNameMap[code] || code
 const formatPercent = (value) => value ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}%` : '--'
+const formatDrawdown = (value) => value ? `${value.toFixed(2)}%` : '--'
 const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleString('zh-CN') : '--'
 
 const handleSelectionChange = (rows) => selectedRows.value = rows
@@ -141,7 +141,7 @@ onMounted(async () => { await loadStrategies(); await loadResults(); })
 .action-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .selected-count { font-size: 14px; color: #999; }
 .btn-run { text-decoration: none; }
-.filter-actions { display: flex; gap: 8px; margin-left: auto; }
+.filter-actions { display: flex; gap: 8px; }
 .card-header-inner { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 .card-header-inner h3 { font-size: 16px; font-weight: 600; margin: 0; }
 .result-count { font-size: 14px; color: #999; }

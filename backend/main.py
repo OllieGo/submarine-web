@@ -13,6 +13,7 @@ from typing import Optional, List
 import json
 
 from data_handler.storage import DataStorage
+from sqlalchemy import text
 
 app = FastAPI(title="Submarine Quant API", version="1.0.0")
 
@@ -127,13 +128,25 @@ async def get_backtest_result(result_id: int):
 
 @app.delete("/api/backtest/results")
 async def delete_backtest_results(ids: List[int] = Body(...)):
-    from sqlalchemy import text
-    if not ids or len(ids) == 0:
+    if not ids:
         raise HTTPException(status_code=400, detail="No IDs provided")
-    query = text("DELETE FROM backtest_results WHERE id IN :ids")
-    with storage.engine.connect() as conn:
-        conn.execute(query, {'ids': tuple(ids)})
-        conn.commit()
+    
+    # 构建安全的占位符
+    placeholders = ','.join([':id{}'.format(i) for i in range(len(ids))])
+    params = {'id{}'.format(i): val for i, val in enumerate(ids)}
+    
+    # 定义 3 个删除语句
+    queries = [
+        f"DELETE FROM backtest_trade WHERE result_id IN ({placeholders})",
+        f"DELETE FROM backtest_equity_curve WHERE result_id IN ({placeholders})",
+        f"DELETE FROM backtest_result WHERE id IN ({placeholders})"
+    ]
+    
+    # 使用事务执行（保证原子性，要么全删，要么都不删）
+    with storage.engine.begin() as conn:
+        for query in queries:
+            conn.execute(text(query), params)
+            
     return {"message": f"Deleted {len(ids)} results successfully"}
 
 @app.get("/api/backtest/equity/{result_id}")
