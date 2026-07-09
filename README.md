@@ -48,6 +48,12 @@ submarine-web/
 
 ### 启动步骤
 
+#### 一键启动
+```bash
+python start.py
+```
+
+#### 前、后端单独启动
 ```bash
 # 1. 启动后端服务 (端口 3000)
 cd backend

@@ -1,73 +1,83 @@
 <template>
-  <el-container class="app-layout">
-    <el-aside class="sidebar" width="200px">
-      <div class="logo">
-        <h2>🔍 潜望量化</h2>
-      </div>
-      <el-menu
-        mode="inline"
-        :default-active="currentKey"
-        class="nav-menu"
-        @select="handleMenuSelect"
-      >
-        <el-menu-item index="/">
-          <span class="icon">🏠</span>
-          <span>首页仪表盘</span>
-        </el-menu-item>
-        <el-menu-item index="/strategies">
-          <span class="icon">⚙️</span>
-          <span>策略管理</span>
-        </el-menu-item>
-        <el-menu-item index="/backtest">
-          <span class="icon">📈</span>
-          <span>回溯结果</span>
-        </el-menu-item>
-        <el-menu-item index="/run-backtest">
-          <span class="icon">▶️</span>
-          <span>执行回溯</span>
-        </el-menu-item>
-        <el-menu-item index="/stocks">
-          <span class="icon">📋</span>
-          <span>股票池</span>
-        </el-menu-item>
-      </el-menu>
-    </el-aside>
-    <el-container class="main-container">
-      <el-header class="header">
-        <div class="header-title">
-          <h1>{{ pageTitle }}</h1>
+  <template v-if="!isAuthPage">
+    <el-container class="app-layout">
+      <el-aside class="sidebar" width="200px">
+        <div class="logo">
+          <h2>🔍 潜望量化</h2>
         </div>
-      </el-header>
-      <div class="tabs-container">
-        <el-tabs
-          v-model="activeTabKey"
-          class="app-tabs"
-          @tab-click="handleTabClick"
-          @tab-remove="handleCloseTab"
+        <el-menu
+          mode="inline"
+          :default-active="currentKey"
+          class="nav-menu"
+          @select="handleMenuSelect"
         >
-          <el-tab-pane
-            v-for="tab in tabs"
-            :key="tab.key"
-            :name="tab.key"
-            :label="tab.title"
-            :closable="tabs.length > 1"
+          <el-menu-item index="/">
+            <span class="icon">🏠</span>
+            <span>首页仪表盘</span>
+          </el-menu-item>
+          <el-menu-item index="/strategies">
+            <span class="icon">⚙️</span>
+            <span>策略管理</span>
+          </el-menu-item>
+          <el-menu-item index="/backtest">
+            <span class="icon">📈</span>
+            <span>回溯结果</span>
+          </el-menu-item>
+          <el-menu-item index="/run-backtest">
+            <span class="icon">▶️</span>
+            <span>执行回溯</span>
+          </el-menu-item>
+          <el-menu-item index="/stocks">
+            <span class="icon">📋</span>
+            <span>股票池</span>
+          </el-menu-item>
+        </el-menu>
+      </el-aside>
+      <el-container class="main-container">
+        <el-header class="header">
+          <div class="header-title">
+            <h1>{{ pageTitle }}</h1>
+          </div>
+          <div class="header-right">
+            <span class="username">{{ authStore.nickName || authStore.username }}</span>
+            <el-button text @click="handleLogout">退出登录</el-button>
+          </div>
+        </el-header>
+        <div class="tabs-container">
+          <el-tabs
+            v-model="activeTabKey"
+            class="app-tabs"
+            @tab-click="handleTabClick"
+            @tab-remove="handleCloseTab"
           >
-          </el-tab-pane>
-        </el-tabs>
-      </div>
-      <el-main class="content">
-        <router-view />
-      </el-main>
+            <el-tab-pane
+              v-for="tab in tabs"
+              :key="tab.key"
+              :name="tab.key"
+              :label="tab.title"
+              :closable="tabs.length > 1"
+            >
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+        <el-main class="content">
+          <router-view />
+        </el-main>
+      </el-container>
     </el-container>
-  </el-container>
+  </template>
+  <router-view v-else />
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const activeTabKey = ref('/')
 
 const pageTitles = {
@@ -87,6 +97,11 @@ const pageTitle = computed(() => {
   if (path.startsWith('/strategies/')) return '策略详情'
   if (path.startsWith('/backtest/')) return '回溯详情'
   return pageTitles[path] || '潜望量化'
+})
+
+const isAuthPage = computed(() => {
+  const authPaths = ['/login', '/register']
+  return authPaths.includes(route.path)
 })
 
 const currentKey = computed(() => {
@@ -136,6 +151,12 @@ watch(
     }
   }
 )
+
+const handleLogout = () => {
+  authStore.logout()
+  ElMessage.success('已退出登录')
+  router.push('/login')
+}
 
 onMounted(() => {
   const path = route.path
@@ -218,6 +239,17 @@ onMounted(() => {
   font-weight: 600;
   color: #333;
   margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.username {
+  font-size: 14px;
+  color: #666;
 }
 
 .tabs-container {

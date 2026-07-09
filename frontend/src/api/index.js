@@ -5,10 +5,25 @@ const api = axios.create({
   timeout: 30000
 })
 
+api.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  error => Promise.reject(error)
+)
+
 api.interceptors.response.use(
   response => response.data,
   error => {
-    console.error('API Error:', error)
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('username')
+      window.location.href = '/login'
+    }
     throw error
   }
 )
@@ -33,6 +48,12 @@ export const backtestAPI = {
   run: (params) => api.post('/backtest/run', params),
   getStats: () => api.get('/backtest/stats'),
   deleteResults: (ids) => api.delete('/backtest/results', { data: ids })
+}
+
+export const authAPI = {
+  login: (username, password) => api.post('/auth/login', { username, password }),
+  register: (username, password, email) => api.post('/auth/register', { username, password, email }),
+  getMe: () => api.get('/auth/me')
 }
 
 export default api
